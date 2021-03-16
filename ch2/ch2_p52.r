@@ -3,6 +3,7 @@
 
 # parameters
 library("raster")
+library("ggplot2")
 
 params <- data.frame(
   patch=1:3
@@ -24,8 +25,13 @@ x.vals <- seq(0, C, 1)
 # initialize with values x0 = xc to xmax = dim
 F1 <- ifelse(x.vals > xc,1,0)
 
-Tmax <- 19
+Tmax <- 40
 
+
+data.all <- NULL
+
+# loop in a reversed fashion 
+# from Tmax to larger timespans
 for (t in seq(Tmax,1,-1))
 {
   # data.frame giving reproductive value
@@ -34,7 +40,6 @@ for (t in seq(Tmax,1,-1))
                      ,Vmax=0
                      ,patch=NA)
   
-  print(F0_D)
   # now step 2 of the algorithm, cycle over the 
   # values of x and then for each value of x
   # cycle over the different patch combinations
@@ -46,8 +51,6 @@ for (t in seq(Tmax,1,-1))
     {
       next
     }
-    
-    
     
     Vi_max <- 0
     patch_max <- 0
@@ -71,7 +74,11 @@ for (t in seq(Tmax,1,-1))
                            ,xc
                            ,C)
       
+      # get the survival values from the next
+      # timestep as we are doing backwards iteration
       print(F1)
+      
+      # check if the values of F1 exist for this level of x
       stopifnot(!is.na(F1[[match(xprime,x.vals)]]))
       stopifnot(!is.na(F1[[match(xprimeprime,x.vals)]]))
       
@@ -106,5 +113,25 @@ for (t in seq(Tmax,1,-1))
 
   print(F0_D)  
   F1 <- F0_D$Vmax
-} # end for (t in seq(T,0,-1))
   
+  # add the current value of t to the data.frame
+  F0_D$t <- t
+ 
+  # append data 
+  if (is.null(data.all)) {
+    data.all <- F0_D
+  } else {
+    data.all <- rbind(data.all,F0_D)
+  }
+} # end for (t in seq(T,0,-1))
+
+data.all$t <- as.factor(data.all$t)
+
+data.all <- data.all[data.all$t %in% c(1,10,Tmax),]
+
+ggplot(data=data.all[data.all$x>=xc,], aes(x=x,y=patch)) +
+  geom_line(aes(color=t)) +
+  xlab("Individual's resource level, x") +
+  ylab("Risk vs non-risk patch choice, x") +
+
+ggsave("page55_output_graph.pdf")
