@@ -107,7 +107,6 @@ for (t in seq(Tmax,1,-1))
       }
     } # end for patch.i
     
-    
     F0_D[F0_D$x == x.val.i,c("Vmax","patch")] <- c(Vi_max, patch_max)
   } # end for x.val.i
 

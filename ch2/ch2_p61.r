@@ -1,4 +1,7 @@
 # dynamic modeling experiment 4
+library("raster")
+library("ggplot2")
+
 # Mangel & Clark chapter 2 page 61
 # we need to implement fecundity
 # increment psi_i(x) = r_i * x
@@ -6,6 +9,8 @@
 # of the terminal survival function 
 # where phi(x) = 1 if x > xc and
 # 0 otherwise
+
+setwd("/Users/bram/Projects/6_Reading/Mangel_Clark_1989")
 
 params <- data.frame(
   patch=1:3
