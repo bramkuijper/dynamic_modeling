@@ -1,0 +1,42 @@
+---
+title: "Mangel and Clark ch3"
+output: html_document
+date: "2025-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+```
+
+## Figure 3.2
+```{r}
+sumpois <- function(nR, nlambda)
+{
+    result <- 0
+    for (k in seq(0,nR,1)) {
+        result <- result + dpois(x = k, lambda=nlambda)
+    }
+    
+    return(1 - result)
+}
+
+lambdat <- 5
+the.data <- as_tibble(expand.grid(
+    n = c(1,5),
+    R = seq(0,15,0.05)
+)) %>% mutate(
+    #    pr_survive=1 - ppois(q = n*R, lambda = n * lambdat),
+    n_f = as_factor(n)
+)
+
+the.data[,"pr_survive"] <- NA
+
+for (row_idx in seq(1,nrow(the.data),1)) {
+    the.data[row_idx,"pr_survive"] <- sumpois(nR = as.numeric(the.data[row_idx,"n"] * the.data[row_idx,"R"]), nlambda = as.numeric(the.data[row_idx,"n"]) * lambdat)
+}
+
+ggplot(data = the.data,
+       mapping = aes(x = R, y = pr_survive)) +
+    geom_line(mapping = aes(colour = n_f))
+```

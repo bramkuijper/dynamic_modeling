@@ -47,9 +47,10 @@ iterate.sys <- function(params_patches
   # terminal survival function
   if (is.na(phi))
   {
-    phi <- function(x) {
-      return(ifelse(x > xc,1,0))
-    }
+      phi <- function(x) 
+      {
+        return(ifelse(x > xc,1,0))
+      }
   }
 
   # maximum iteration time (note that
@@ -61,7 +62,7 @@ iterate.sys <- function(params_patches
   F1.x <- sapply(X=x.vals, FUN=phi)
 
   # make sequence of tau timesteps
-  tau.vals <- seq(from=1,to=tau.max,by=1)
+  tau.vals <- seq(from=1,to=max.tau,by=1)
   F1.tau <- tau.vals
 
   # make the F1 vector in x and tau, in which
@@ -69,16 +70,22 @@ iterate.sys <- function(params_patches
   # the actual values of F(x',t+1,T)
   F1.df <- expand.grid(x=F1.x, tau=F1.tau)
   F1.df$F1 <- NA
+  
+  # initially, one sets F1(x,1) = phi(x)
+  # and F1(x,tau) = 0 for tau > 1
   F1.df[F1.df$tau == 1,"F1"] <- phi(F1.df[F1.df$tau == 1,"x"])
 
+  # auxiliary variable to store all the data
   data.all <- NULL
 
   # loop in a reversed fashion
-  # from Tmax to larger timespans
+  # from t=Tmax to t=1
   for (t in seq(Tmax,1,-1))
   {
     # data.frame giving reproductive value
     # and patch choice for each level of x and tau
+    
+    # first allocate x column to 0
     F0_D <- data.frame(x=rep(0,times=length(F1.x)))
     F0_D$Fx_t <- 0
     F0_D$patch <- NA
@@ -96,6 +103,7 @@ iterate.sys <- function(params_patches
     {
       x.val.i <- x.vals[[iter.x.i]]
 
+      # F(x,t,T) = 0 for x<=x_{c}
       if (x.val.i <= xc)
       {
         next
@@ -109,6 +117,7 @@ iterate.sys <- function(params_patches
       handling_time_max <- 0
 
       # loop through all the values of tau (handling time)
+      # tau.i == 0 corresponds to t'=t in F(x,t',T) on p65, 2nd para
       for (tau.i in seq(from=0,to=tau_max,by=1))
       {
         # now check which patch gives maximal gains
@@ -119,7 +128,7 @@ iterate.sys <- function(params_patches
           lambda.i <- params[params$patch == patch.i,"lambda"]
           beta.i <- params[params$patch == patch.i,"beta"]
 
-          # calculate x'
+          # calculate x' according to eq. (2.13) on page 64
           xprime <- clamp(x=x.val.i - tau.i * alpha.i + Y.i
                          ,lower=xc
                          ,upper=C
@@ -130,7 +139,7 @@ iterate.sys <- function(params_patches
             xprime <- x.val.i + max.increase
           }
 
-          # calculate x''
+          # calculate x'' according to eq. (2.13) on page 64
           xprimeprime <- clamp(x=x.val.i - alpha.i
                                ,lower=xc
                                ,upper=C)
@@ -145,7 +154,7 @@ iterate.sys <- function(params_patches
           stopifnot(!is.na(F1[[match(xprime,x.vals)]]))
           stopifnot(!is.na(F1[[match(xprimeprime,x.vals)]]))
 
-          # calculate Vi
+          # calculate Vi  
           Fx_t.unclamped <-
                 (1.0 - beta.i)^(tau.i) * (
                 lambda.i * F1.df[F1.df$tau == tau.i & F1.df$x == xprime,"F1"]
@@ -199,6 +208,7 @@ iterate.sys <- function(params_patches
   return(data.all)
 } # end function iterate sys.
 
+# set all the parameters for this example
 params <- data.frame(
   patch=1:3
   ,beta=c(0,0.004,0.02)

@@ -5,6 +5,8 @@
 library("raster")
 library("ggplot2")
 
+# these are the parameter values for
+# each of the three patches
 params <- data.frame(
   patch=1:3
   ,beta=c(0,0.004,0.02)
@@ -27,14 +29,16 @@ F1 <- ifelse(x.vals > xc,1,0)
 
 Tmax <- 40
 
-
+#  
 data.all <- NULL
 
 # loop in a reversed fashion 
-# from Tmax to larger timespans
+# from Tmax to 0 
+# this is called backwards iteration
 for (t in seq(Tmax,1,-1))
 {
-  # data.frame giving reproductive value
+  # allocate a data.frame giving 
+  # reproductive value
   # and patch choice for each level of x
   F0_D <- data.frame(x=x.vals
                      ,Vmax=0

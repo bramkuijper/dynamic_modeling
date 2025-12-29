@@ -1,0 +1,49 @@
+---
+title: "Mangel_Clark_ch_9"
+output: html_document
+date: "2025-12-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+```
+
+## chapter 9
+```{r}
+lambda_vals <- c(1, 2, 3, 4)
+arrival_numbers <- seq(0, 10, 1)
+
+table_9_1 <- as_tibble(
+    expand.grid(
+        lambda = lambda_vals,
+        arrival_n = arrival_numbers)
+)
+
+posterior <- function(n, lambda, s = 1) {
+    prior <- 0.25
+    evidence <- 0
+    
+    for (i in seq(1,length(lambda_vals))) {
+        lambda_val_i <- lambda_vals[[i]]
+        evidence <- evidence + (lambda_val_i * s)^n * exp(-lambda_val_i * s) / factorial(n) * prior
+    }
+    
+    return((
+        (lambda * s)^n * exp(-lambda * s) / factorial(n) * prior) /
+            evidence
+        )
+}
+
+table_9_1 <- table_9_1 %>% mutate(
+    posterior_probs = purrr::pmap_dbl(.,\(arrival_n, lambda)
+                                posterior(arrival_n, lambda))
+)
+
+# ok now put this down in table format similar to table 9.1
+table_9_1_short <- table_9_1 %>% pivot_wider(
+    names_from = "lambda",
+    values_from = "posterior_probs")
+
+(table_9_1_short)
+```
